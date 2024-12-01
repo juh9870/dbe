@@ -14,6 +14,7 @@ use ustr::{Ustr, UstrMap};
 
 mod colors;
 mod ids;
+mod optional;
 
 #[allow(clippy::wrong_self_convention)]
 pub trait JsonRepr: Send + Sync + Debug {
@@ -78,7 +79,7 @@ pub trait JsonRepr: Send + Sync + Debug {
         this: &EItemInfo,
         value: EValue,
     ) -> miette::Result<EValue> {
-        let _ = (registry, value);
+        let _ = (registry, this, value);
         bail!("conversion not supported")
     }
 
@@ -186,6 +187,7 @@ static REPR_REGISTRY: LazyLock<RwLock<UstrMap<Repr>>> = LazyLock::new(|| {
             Arc::new(ColorStringRepr::RGBA),
             Arc::new(ids::numeric::Id),
             Arc::new(ids::numeric::Ref),
+            Arc::new(optional::OptionalRepr),
         ];
 
         reprs

@@ -1,4 +1,4 @@
-enum "Item" editor="enum" kind="toggle" port="hollow" {
+enum "Item" repr="option" editor="enum" kind="toggle" port="hollow" {
     const "none" null
     generic "some" "Item"
 }

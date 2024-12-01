@@ -85,19 +85,15 @@ impl NodePortType {
         let from = from.item_info_or_null();
 
         if let Some(repr) = from.repr(registry) {
-            #[cfg(debug_assertions)]
-            if !repr.is_convertible_to(registry, &from, to) {
-                panic!("only compatible types should be passed to this function");
+            if repr.is_convertible_to(registry, &from, to) {
+                return repr.convert_to(registry, to, value);
             }
-            return repr.convert_to(registry, to, value);
         }
 
         if let Some(repr) = to.repr(registry) {
-            #[cfg(debug_assertions)]
-            if !repr.is_convertible_from(registry, to, &from) {
-                panic!("only compatible types should be passed to this function");
+            if repr.is_convertible_from(registry, to, &from) {
+                return repr.convert_from(registry, to, value);
             }
-            return repr.convert_from(registry, &from, value);
         }
 
         bail!("conversion not supported")
