@@ -56,6 +56,7 @@ impl JsonRepr for Id {
     fn convert_to(
         &self,
         registry: &ETypesRegistry,
+        _this: &EItemInfo,
         other: &EItemInfo,
         value: EValue,
     ) -> miette::Result<EValue> {
@@ -132,6 +133,7 @@ impl JsonRepr for Ref {
         &self,
         _registry: &ETypesRegistry,
         this: &EItemInfo,
+        _other: &EItemInfo,
         value: EValue,
     ) -> miette::Result<EValue> {
         // ids/numeric_ref can be converted from ids/numeric
@@ -146,6 +148,7 @@ impl JsonRepr for Ref {
     fn convert_to(
         &self,
         _registry: &ETypesRegistry,
+        _this: &EItemInfo,
         other: &EItemInfo,
         value: EValue,
     ) -> miette::Result<EValue> {

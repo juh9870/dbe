@@ -91,13 +91,13 @@ impl NodePortType {
 
         if let Some(repr) = from.repr(registry) {
             if repr.is_convertible_to(registry, &from, to) {
-                return repr.convert_to(registry, to, value);
+                return repr.convert_to(registry, &from, to, value);
             }
         }
 
         if let Some(repr) = to.repr(registry) {
             if repr.is_convertible_from(registry, to, &from) {
-                return repr.convert_from(registry, to, value);
+                return repr.convert_from(registry, to, &from, value);
             }
         }
 
@@ -255,7 +255,7 @@ fn convert_enum(
                 if inner_repr.is_convertible_from(registry, inner_info, from) {
                     return Ok(Some(make_enum(
                         variant_id,
-                        inner_repr.convert_from(registry, inner_info, value)?,
+                        inner_repr.convert_from(registry, inner_info, from, value)?,
                     )));
                 }
             }
@@ -263,7 +263,7 @@ fn convert_enum(
                 if repr.is_convertible_to(registry, from, inner_info) {
                     return Ok(Some(make_enum(
                         variant_id,
-                        repr.convert_to(registry, inner_info, value)?,
+                        repr.convert_to(registry, from, inner_info, value)?,
                     )));
                 }
             }

@@ -76,6 +76,7 @@ pub trait JsonRepr: Send + Sync + Debug {
         &self,
         registry: &ETypesRegistry,
         this: &EItemInfo,
+        _other: &EItemInfo,
         value: EValue,
     ) -> miette::Result<EValue> {
         let _ = (registry, this, value);
@@ -88,6 +89,7 @@ pub trait JsonRepr: Send + Sync + Debug {
     fn convert_to(
         &self,
         registry: &ETypesRegistry,
+        _this: &EItemInfo,
         other: &EItemInfo,
         value: EValue,
     ) -> miette::Result<EValue> {
@@ -156,18 +158,20 @@ impl JsonRepr for Repr {
         &self,
         registry: &ETypesRegistry,
         this: &EItemInfo,
+        other: &EItemInfo,
         value: EValue,
     ) -> miette::Result<EValue> {
-        self.0.convert_from(registry, this, value)
+        self.0.convert_from(registry, this, other, value)
     }
 
     fn convert_to(
         &self,
         registry: &ETypesRegistry,
+        this: &EItemInfo,
         other: &EItemInfo,
         value: EValue,
     ) -> miette::Result<EValue> {
-        self.0.convert_to(registry, other, value)
+        self.0.convert_to(registry, this, other, value)
     }
 }
 
