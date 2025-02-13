@@ -1,8 +1,10 @@
+use crate::etype::EDataType;
 use crate::graph::node::commands::SnarlCommands;
 use crate::graph::node::editable_state::EditableState;
 use crate::graph::node::extras::ExecutionExtras;
 use crate::graph::node::ports::{InputData, NodePortType, OutputData};
 use crate::graph::node::{ExecutionResult, NodeContext};
+use crate::registry::ETypesRegistry;
 use crate::value::EValue;
 use egui_snarl::{InPin, NodeId, OutPin};
 use std::fmt::Debug;
@@ -148,4 +150,14 @@ pub trait StatefulNode: 'static + Debug + Clone + Hash + Send + Sync {
 
     fn categories() -> &'static [&'static str];
     fn create() -> Self;
+
+    fn output_port_for(ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        let _ = (ty, registry);
+        None
+    }
+
+    fn input_port_for(ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        let _ = (ty, registry);
+        None
+    }
 }

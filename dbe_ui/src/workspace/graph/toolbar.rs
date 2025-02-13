@@ -7,6 +7,7 @@ use dbe_backend::project::project_graph::ProjectGraph;
 use dbe_backend::registry::ETypesRegistry;
 use egui::{CollapsingHeader, Ui};
 use egui_snarl::NodeId;
+use list_edit::list_editor;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
@@ -54,6 +55,18 @@ impl ToolbarViewer for GraphToolbarViewer<'_> {
                         ui.label("Name");
                         ui.text_edit_singleline(&mut self.graph.name);
                     });
+
+                    ui.label("Categories");
+                    list_editor::<String, _>(ui.id().with("categories"))
+                        .new_item(|_| Default::default())
+                        .show(ui, &mut self.graph.categories, |ui, _, item| {
+                            ui.horizontal(|ui| {
+                                let res = ui.text_edit_singleline(item);
+                                if res.changed() {
+                                    *item = item.replace(['/', '\\', ':'], ".")
+                                }
+                            });
+                        });
 
                     edit_inputs_outputs(ui, self.graph.graph_mut());
                 });

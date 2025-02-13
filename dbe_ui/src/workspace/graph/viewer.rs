@@ -2,10 +2,11 @@ use crate::workspace::graph::viewer::default_view::DefaultNodeView;
 use crate::workspace::graph::viewer::destructuring::DestructuringNodeViewer;
 use crate::workspace::graph::viewer::reroute::RerouteNodeViewer;
 use crate::workspace::graph::viewer::subgraph::SubgraphNodeViewer;
+use crate::workspace::graph::viewer::tree_subgraph::TreeSubgraphNodeViewer;
 use crate::workspace::graph::GraphViewer;
 use atomic_refcell::AtomicRefCell;
 use dbe_backend::graph::node::SnarlNode;
-use egui::Ui;
+use egui::{InnerResponse, Ui};
 use egui_snarl::ui::{NodeLayout, PinInfo};
 use egui_snarl::{InPin, NodeId, OutPin, Snarl};
 use std::fmt::Debug;
@@ -17,6 +18,7 @@ pub mod default_view;
 pub mod destructuring;
 pub mod reroute;
 pub mod subgraph;
+pub mod tree_subgraph;
 
 static NODE_VIEWERS: LazyLock<AtomicRefCell<UstrMap<Arc<dyn NodeView>>>> =
     LazyLock::new(|| AtomicRefCell::new(default_viewers().collect()));
@@ -27,6 +29,7 @@ fn default_viewers() -> impl Iterator<Item = (Ustr, Arc<dyn NodeView>)> {
         Arc::new(RerouteNodeViewer),
         Arc::new(SubgraphNodeViewer),
         Arc::new(DestructuringNodeViewer),
+        Arc::new(TreeSubgraphNodeViewer),
     ];
     v.into_iter().map(|item| (Ustr::from(&item.id()), item))
 }
@@ -63,7 +66,7 @@ pub trait NodeView: Send + Sync + Debug + 'static {
         ui: &mut Ui,
         scale: f32,
         snarl: &mut Snarl<SnarlNode>,
-    ) -> miette::Result<PinInfo> {
+    ) -> miette::Result<InnerResponse<PinInfo>> {
         DefaultNodeView.show_input(viewer, pin, ui, scale, snarl)
     }
 
@@ -74,7 +77,7 @@ pub trait NodeView: Send + Sync + Debug + 'static {
         ui: &mut Ui,
         scale: f32,
         snarl: &mut Snarl<SnarlNode>,
-    ) -> miette::Result<PinInfo> {
+    ) -> miette::Result<InnerResponse<PinInfo>> {
         DefaultNodeView.show_output(viewer, pin, ui, scale, snarl)
     }
 

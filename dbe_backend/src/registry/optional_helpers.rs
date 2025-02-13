@@ -1,6 +1,6 @@
 use crate::etype::eobject::EObject;
 use crate::etype::EDataType;
-use crate::registry::{ETypesRegistry, OPTIONAL_ID};
+use crate::registry::{ETypesRegistry, OPTIONAL_ID, OPTIONAL_PREFIX};
 use crate::value::EValue;
 use miette::bail;
 
@@ -61,4 +61,14 @@ pub fn unwrap_optional_value<'a>(
         "None" => Ok(None),
         _ => panic!("Unexpected variant name"),
     }
+}
+
+pub fn is_type_option(ty: EDataType) -> bool {
+    let EDataType::Object { ident } = ty else {
+        return false;
+    };
+
+    ident
+        .as_raw()
+        .is_some_and(|id| id.starts_with(OPTIONAL_PREFIX))
 }

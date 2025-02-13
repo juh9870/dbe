@@ -570,6 +570,14 @@ impl<T: VariablesTrait> NodeFactory for VariablesNodeFactory<T> {
             variables: Default::default(),
         })
     }
+
+    fn output_port_for(&self, ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        T::output_port_for(ty, registry)
+    }
+
+    fn input_port_for(&self, ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        T::input_port_for(ty, registry)
+    }
 }
 
 pub trait VariablesTrait:

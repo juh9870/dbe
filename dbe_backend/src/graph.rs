@@ -95,11 +95,17 @@ impl Graph {
 
         m_try(|| {
             for (serialized_id, mut node) in packed.nodes {
-                let mut created_node = get_node_factory(&node.id)
-                    .ok_or_else(|| miette!("node type {} not found", node.id))?
-                    .create();
+                let created_node = m_try(|| {
+                    let mut created_node = get_node_factory(&node.id)
+                        .ok_or_else(|| miette!("node type {} not found", node.id))?
+                        .create();
 
-                created_node.parse_json(registry, &mut node.data)?;
+                    created_node.parse_json(registry, &mut node.data)?;
+                    Ok(created_node)
+                })
+                .with_context(|| {
+                    format!("failed to create node {}({:?})", node.id, serialized_id)
+                })?;
 
                 let mut created_node = SnarlNode::new(created_node);
 
@@ -143,6 +149,12 @@ impl Graph {
             );
             let commands = &mut SnarlCommands::new();
 
+            ctx.update_all_nodes_state(commands)?;
+
+            commands
+                .execute(&mut ctx)
+                .with_context(|| "failed to execute commands")?;
+
             let mut to_connect = Vec::with_capacity(packed.edges.len());
 
             for (mut out_pin, mut in_pin) in packed.edges {
@@ -171,6 +183,8 @@ impl Graph {
                 ctx.connect(&out_pin, &in_pin, commands)?;
             }
 
+            ctx.update_all_nodes_state(commands)?;
+
             commands
                 .execute(&mut ctx)
                 .with_context(|| "failed to execute commands")?;
@@ -197,6 +211,7 @@ impl Graph {
                     .try_input(
                         NodeContext {
                             registry,
+                            docs: &Docs::Stub,
                             inputs: &graph.inputs,
                             outputs: &graph.outputs,
                             regions: &graph.regions,
@@ -249,7 +264,7 @@ impl Graph {
                 continue;
             };
 
-            if !node.has_inline_values()? {
+            if !node.has_inline_values(pin.input) {
                 continue;
             }
 
@@ -306,11 +321,13 @@ impl Graph {
     pub fn snarl_and_context<'a>(
         &'a mut self,
         registry: &'a ETypesRegistry,
+        docs: &'a Docs,
     ) -> (&'a mut Snarl<SnarlNode>, NodeContext<'a>) {
         (
             &mut self.snarl,
             NodeContext {
                 registry,
+                docs,
                 inputs: &self.inputs,
                 outputs: &self.outputs,
                 regions: &self.regions,

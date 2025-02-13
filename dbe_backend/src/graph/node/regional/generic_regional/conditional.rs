@@ -243,6 +243,10 @@ impl<const KIND: u8> GenericStatefulNode for ConditionalNode<KIND> {
     fn create() -> Self {
         Self { input_ty: None }
     }
+
+    fn input_port_for(ty: EDataType, _registry: &ETypesRegistry) -> Option<usize> {
+        ty.is_boolean().then_some(0)
+    }
 }
 
 #[derive(Debug)]

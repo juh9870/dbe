@@ -9,7 +9,7 @@ use crate::graph::node::extras::ExecutionExtras;
 use crate::graph::node::ports::NodePortType;
 use crate::graph::node::serde_node::impl_serde_node;
 use crate::graph::node::{ExecutionResult, InputData, Node, NodeContext, NodeFactory, OutputData};
-use crate::project::docs::{Docs, DocsRef};
+use crate::project::docs::DocsRef;
 use crate::registry::ETypesRegistry;
 use crate::value::EValue;
 use egui_snarl::{InPin, InPinId, NodeId, OutPin};
@@ -86,7 +86,7 @@ impl Node for EnumNode {
         EnumNodeFactory.id()
     }
 
-    fn title(&self, context: NodeContext, _docs: &Docs) -> String {
+    fn title(&self, context: NodeContext) -> String {
         let Some((data, _variant)) = self.get_data(context.registry) else {
             return "Unknown enum variant".into();
         };

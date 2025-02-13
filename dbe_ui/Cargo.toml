@@ -30,6 +30,7 @@ list_edit = { workspace = true }
 miette = { workspace = true, features = ["fancy"] }
 nucleo = { workspace = true }
 num-traits = { workspace = true }
+parking_lot = { workspace = true }
 random_color = { workspace = true }
 sanitise-file-name = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

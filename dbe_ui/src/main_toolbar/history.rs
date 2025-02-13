@@ -54,24 +54,26 @@ pub fn history_tab(ui: &mut Ui, app: &mut DbeApp) {
         .chain(undone.map(Entry::UndoneHistory))
         .chain(future.map(Entry::Future));
 
-    egui::ScrollArea::vertical().show_rows(ui, height, count, |ui, x| {
-        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-        for i in items.skip(x.start).take(x.len()) {
-            match i {
-                Entry::Past(snapshot) => {
-                    ui.add_enabled(false, Button::new(text_for_snapshot(snapshot)));
-                }
-                Entry::UndoneHistory(snapshot) => {
-                    ui.indent(&snapshot.path, |ui| {
+    egui::ScrollArea::vertical()
+        .min_scrolled_height(height * 10.0)
+        .show_rows(ui, height, count, |ui, x| {
+            ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+            for i in items.skip(x.start).take(x.len()) {
+                match i {
+                    Entry::Past(snapshot) => {
                         ui.add_enabled(false, Button::new(text_for_snapshot(snapshot)));
-                    });
-                }
-                Entry::Future(snapshot) => {
-                    ui.indent(&snapshot.path, |ui| {
-                        ui.add_enabled(false, Button::new(text_for_snapshot(snapshot)));
-                    });
+                    }
+                    Entry::UndoneHistory(snapshot) => {
+                        ui.indent(&snapshot.path, |ui| {
+                            ui.add_enabled(false, Button::new(text_for_snapshot(snapshot)));
+                        });
+                    }
+                    Entry::Future(snapshot) => {
+                        ui.indent(&snapshot.path, |ui| {
+                            ui.add_enabled(false, Button::new(text_for_snapshot(snapshot)));
+                        });
+                    }
                 }
             }
-        }
-    });
+        });
 }

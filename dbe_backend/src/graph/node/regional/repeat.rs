@@ -8,6 +8,7 @@ use crate::graph::node::variables::remember_variables;
 use crate::graph::node::{ExecutionResult, NodeContext};
 use crate::graph::region::RegionExecutionData;
 use crate::json_utils::json_serde::JsonSerde;
+use crate::registry::ETypesRegistry;
 use crate::value::EValue;
 use miette::bail;
 use ustr::Ustr;
@@ -140,6 +141,10 @@ impl StatefulNode for RepeatNode {
 
     fn create() -> Self {
         Self
+    }
+
+    fn input_port_for(ty: EDataType, _registry: &ETypesRegistry) -> Option<usize> {
+        ty.is_number().then_some(0)
     }
 }
 

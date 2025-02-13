@@ -1,4 +1,5 @@
 use crate::etype::eobject::EObject;
+use crate::etype::EDataType;
 use crate::graph::node::commands::{SnarlCommand, SnarlCommands};
 use crate::graph::node::extras::ExecutionExtras;
 use crate::graph::node::generic::{generic_try_connect, GenericNodeField, GenericNodeFieldMut};
@@ -7,7 +8,8 @@ use crate::graph::node::ports::{InputData, NodePortType, OutputData};
 use crate::graph::node::serde_node::impl_serde_node;
 use crate::graph::node::struct_node::StructNodeFieldMapper;
 use crate::graph::node::{ExecutionResult, Node, NodeContext, NodeFactory};
-use crate::project::docs::{Docs, DocsRef};
+use crate::project::docs::DocsRef;
+use crate::registry::ETypesRegistry;
 use crate::value::id::ETypeId;
 use crate::value::EValue;
 use egui_snarl::{InPin, NodeId, OutPin, OutPinId};
@@ -29,7 +31,7 @@ impl Node for DestructuringNode {
         DestructuringNodeFactory.id()
     }
 
-    fn title(&self, context: NodeContext, _docs: &Docs) -> String {
+    fn title(&self, context: NodeContext) -> String {
         let Some(id) = self.id else {
             return "Destructuring".into();
         };
@@ -65,8 +67,8 @@ impl Node for DestructuringNode {
         Ok(())
     }
 
-    fn has_inline_values(&self) -> miette::Result<bool> {
-        Ok(false)
+    fn has_inline_values(&self, _input: usize) -> bool {
+        false
     }
 
     fn inputs_count(&self, _context: NodeContext) -> usize {
@@ -191,5 +193,12 @@ impl NodeFactory for DestructuringNodeFactory {
 
     fn create(&self) -> Box<dyn Node> {
         Box::new(DestructuringNode::default())
+    }
+
+    fn input_port_for(&self, ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        let EDataType::Object { ident } = ty else {
+            return None;
+        };
+        registry.get_struct(&ident).is_some().then_some(0)
     }
 }

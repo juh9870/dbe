@@ -6,6 +6,7 @@ use crate::graph::node::functional::generic::{sync_generic_state, MAX_FIELDS};
 use crate::graph::node::functional::FunctionalNode;
 use crate::graph::node::generic::{GenericNode, GenericNodeField, GenericNodeFieldMut};
 use crate::graph::node::{ExecutionResult, Node, NodeContext, NodeFactory};
+use crate::registry::optional_helpers::is_type_option;
 use crate::registry::ETypesRegistry;
 use crate::value::EValue;
 use arrayvec::ArrayVec;
@@ -153,6 +154,28 @@ impl<T: FunctionalNode + Clone> NodeFactory for T {
             node: self.clone(),
             input_ty: [None; MAX_FIELDS],
             output_ty: [None; MAX_FIELDS],
+        })
+    }
+
+    fn output_port_for(&self, ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        let count = T::outputs_count();
+        (0..count).find(|&i| match T::output(registry, i, &None) {
+            GenericNodeField::List(_) => ty.is_list(),
+            GenericNodeField::Value(_) => true,
+            GenericNodeField::Option(_) => is_type_option(ty),
+            GenericNodeField::Object(_) => ty.is_object(),
+            GenericNodeField::Fixed(fixed_ty) => ty == fixed_ty,
+        })
+    }
+
+    fn input_port_for(&self, ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        let count = T::inputs_count();
+        (0..count).find(|&i| match T::input(registry, i, &None) {
+            GenericNodeField::List(_) => ty.is_list(),
+            GenericNodeField::Value(_) => true,
+            GenericNodeField::Option(_) => is_type_option(ty),
+            GenericNodeField::Object(_) => ty.is_object(),
+            GenericNodeField::Fixed(fixed_ty) => fixed_ty.is_unknown() || ty == fixed_ty,
         })
     }
 }

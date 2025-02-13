@@ -1,6 +1,9 @@
+use crate::etype::econst::ETypeConst;
 use crate::etype::eobject::EObject;
 use crate::etype::property::default_properties::PROP_OBJECT_TITLE;
+use crate::etype::EDataType;
 use crate::registry::ETypesRegistry;
+use crate::value::id::ETypeId;
 use itertools::Itertools;
 use squidfmt::formatting::{FormatKeyError, FormatKeys};
 use std::fmt::Formatter;
@@ -87,6 +90,17 @@ impl<T: EObject> FormatKeys for FmtTitle<'_, T> {
 
         if let Some(item) = &self.0.generic_arguments_values().get(pos) {
             let ty = item.ty();
+            if let EDataType::Const {
+                value: ETypeConst::String(value),
+            } = ty
+            {
+                if let Ok(ty) = ETypeId::parse(value.as_str()) {
+                    if let Some(obj) = self.1.get_object(&ty) {
+                        return write!(f, "{}", obj.title(self.1)).map_err(FormatKeyError::Fmt);
+                    }
+                }
+            }
+
             write!(f, "{}", ty.title(self.1)).map_err(FormatKeyError::Fmt)
         } else {
             write!(f, "{}", name).map_err(FormatKeyError::Fmt)

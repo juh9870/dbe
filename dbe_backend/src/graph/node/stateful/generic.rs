@@ -1,4 +1,5 @@
 use crate::etype::eitem::EItemInfo;
+use crate::etype::EDataType;
 use crate::graph::node::commands::SnarlCommands;
 use crate::graph::node::editable_state::EditableState;
 use crate::graph::node::extras::ExecutionExtras;
@@ -151,6 +152,16 @@ pub trait GenericStatefulNode: 'static + Debug + Clone + Hash + Send + Sync {
 
     fn categories() -> &'static [&'static str];
     fn create() -> Self;
+
+    fn output_port_for(ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        let _ = (ty, registry);
+        None
+    }
+
+    fn input_port_for(ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        let _ = (ty, registry);
+        None
+    }
 }
 
 impl<T: GenericStatefulNode> JsonSerde for T {
@@ -364,5 +375,13 @@ impl<T: GenericStatefulNode> StatefulNode for T {
 
     fn create() -> Self {
         <T as GenericStatefulNode>::create()
+    }
+
+    fn output_port_for(ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        <T as GenericStatefulNode>::output_port_for(ty, registry)
+    }
+
+    fn input_port_for(ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        <T as GenericStatefulNode>::input_port_for(ty, registry)
     }
 }

@@ -48,11 +48,11 @@ pub fn edit_node(
         return;
     };
 
-    let (snarl, context) = graph.snarl_and_context(registry);
+    let (snarl, context) = graph.snarl_and_context(registry, docs);
     let node = &mut snarl[node_id];
 
     ui.horizontal(|ui| {
-        let default_name = node.title(context, docs);
+        let default_name = node.title(context);
         edit_opt(
             ui,
             &mut node.custom_title,

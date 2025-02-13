@@ -419,6 +419,7 @@ impl<IO: ProjectIO> Project<IO> {
                 let mut ctx = GraphExecutionContext::from_graph(
                     graph.graph(),
                     &self.registry,
+                    &self.docs,
                     Some(&self.graphs),
                     SideEffectsContext::new(&mut side_effects, path.clone(), &self.files),
                     graph.is_node_group,

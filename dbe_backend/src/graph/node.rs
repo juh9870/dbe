@@ -1,4 +1,5 @@
 use crate::etype::default::DefaultEValue;
+use crate::etype::EDataType;
 use crate::graph::inputs::{GraphInput, GraphOutput};
 use crate::graph::node::colors::NodeColorScheme;
 use crate::graph::node::commands::{SnarlCommand, SnarlCommands};
@@ -12,6 +13,7 @@ use crate::graph::node::generic::destructuring::DestructuringNodeFactory;
 use crate::graph::node::groups::input::GroupInputNodeFactory;
 use crate::graph::node::groups::output::GroupOutputNodeFactory;
 use crate::graph::node::groups::subgraph::SubgraphNodeFactory;
+use crate::graph::node::groups::tree_subgraph::TreeSubgraphFactory;
 use crate::graph::node::list::ListNodeFactory;
 use crate::graph::node::ports::{InputData, NodePortType, OutputData};
 use crate::graph::node::regional::generic_regional::construct::ConstructListNode;
@@ -54,6 +56,7 @@ use uuid::Uuid;
 
 pub mod colors;
 pub mod commands;
+pub mod creation;
 pub mod editable_state;
 pub mod enum_node;
 pub mod expression_node;
@@ -109,6 +112,7 @@ fn default_nodes() -> impl Iterator<Item = (Ustr, Arc<dyn NodeFactory>)> {
     push(v, FormatNodeFactory);
     push(v, ExpressionNodeFactory);
     push(v, DestructuringNodeFactory);
+    push(v, TreeSubgraphFactory);
     // regional
     push(v, RegionalNodeFactory::<RepeatNode>::INSTANCE);
     push(v, RegionalNodeFactory::<ConditionalIfNode>::INSTANCE);
@@ -158,11 +162,22 @@ pub trait NodeFactory: Send + Sync + Debug + 'static {
         let id = graph.insert_node(pos, SnarlNode::new(self.create()));
         smallvec![id]
     }
+
+    fn output_port_for(&self, ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        let _ = (ty, registry);
+        None
+    }
+
+    fn input_port_for(&self, ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        let _ = (ty, registry);
+        None
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
 pub struct NodeContext<'a> {
     pub registry: &'a ETypesRegistry,
+    pub docs: &'a Docs,
     pub inputs: &'a SmallVec<[GraphInput; 1]>,
     pub outputs: &'a SmallVec<[GraphOutput; 1]>,
     pub regions: &'a OrderMap<Uuid, RegionInfo>,
@@ -186,11 +201,11 @@ impl SnarlNode {
         }
     }
 
-    pub fn title(&self, context: NodeContext, docs: &Docs) -> String {
+    pub fn title(&self, context: NodeContext) -> String {
         if let Some(title) = &self.custom_title {
             title.clone()
         } else {
-            self.node.title(context, docs)
+            self.node.title(context)
         }
     }
 }
@@ -260,10 +275,9 @@ pub trait Node: DynClone + DynHash + Debug + Send + Sync + Downcast + 'static {
     }
 
     /// Human-readable title of the node
-    fn title(&self, context: NodeContext, docs: &Docs) -> String {
-        let _ = (context, docs);
+    fn title(&self, context: NodeContext) -> String {
         DocsWindowRef::Node(self.id())
-            .title(docs, context.registry)
+            .title(context.docs, context.registry)
             .to_string()
     }
 
@@ -330,8 +344,9 @@ pub trait Node: DynClone + DynHash + Debug + Send + Sync + Downcast + 'static {
     }
 
     /// Determines if the node has inline editable values
-    fn has_inline_values(&self) -> miette::Result<bool> {
-        Ok(true)
+    fn has_inline_values(&self, input: usize) -> bool {
+        let _ = (input,);
+        true
     }
 
     /// Node inputs

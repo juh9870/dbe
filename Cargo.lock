@@ -1254,6 +1254,7 @@ dependencies = [
  "miette",
  "nucleo",
  "num-traits",
+ "parking_lot",
  "random_color",
  "sanitise-file-name",
  "serde",
@@ -1496,7 +1497,7 @@ dependencies = [
 [[package]]
 name = "egui-snarl"
 version = "0.6.0"
-source = "git+https://github.com/juh9870/egui-snarl.git?rev=59a3427e4a3168c23444b24925d33cc0ec8bd204#59a3427e4a3168c23444b24925d33cc0ec8bd204"
+source = "git+https://github.com/juh9870/egui-snarl.git?rev=a6b15514a5502771523b71f29cac8e74161f31fb#a6b15514a5502771523b71f29cac8e74161f31fb"
 dependencies = [
  "egui",
  "serde",

@@ -357,8 +357,9 @@ pub trait GenericNode: DynClone + DynHash + Debug + Send + Sync + Downcast + 'st
     }
 
     /// See [Node::has_inline_values]
-    fn has_inline_values(&self) -> miette::Result<bool> {
-        Ok(true)
+    fn has_inline_values(&self, input: usize) -> bool {
+        let _ = (input,);
+        true
     }
 
     /// See [Node::has_side_effects]
@@ -534,8 +535,8 @@ impl<T: GenericNode> Node for T {
         T::apply_editable_state(self, state, commands, node_id)
     }
 
-    fn has_inline_values(&self) -> miette::Result<bool> {
-        T::has_inline_values(self)
+    fn has_inline_values(&self, input: usize) -> bool {
+        T::has_inline_values(self, input)
     }
 
     fn inputs_count(&self, context: NodeContext) -> usize {

@@ -382,6 +382,20 @@ impl<const KIND: u8> GenericStatefulNode for ForEachLikeRegionalNode<KIND> {
             output_ty: None,
         }
     }
+
+    fn output_port_for(ty: EDataType, _registry: &ETypesRegistry) -> Option<usize> {
+        match ForEachKind::of(KIND) {
+            ForEachKind::ForEach => None,
+            ForEachKind::Map
+            | ForEachKind::Filter
+            | ForEachKind::FilterMap
+            | ForEachKind::FlatMap => ty.is_list().then_some(0),
+        }
+    }
+
+    fn input_port_for(ty: EDataType, _registry: &ETypesRegistry) -> Option<usize> {
+        ty.is_list().then_some(0)
+    }
 }
 
 #[derive(Debug)]

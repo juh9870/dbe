@@ -222,4 +222,8 @@ impl NodeFactory for ExpressionNodeFactory {
             expr: None,
         })
     }
+
+    fn output_port_for(&self, ty: EDataType, _registry: &ETypesRegistry) -> Option<usize> {
+        ty.is_number().then_some(0)
+    }
 }

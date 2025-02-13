@@ -1,3 +1,4 @@
+use crate::etype::EDataType;
 use crate::graph::inputs::GraphIoData;
 use crate::graph::node::commands::{SnarlCommand, SnarlCommands};
 use crate::graph::node::editable_state::EditableState;
@@ -532,6 +533,14 @@ impl<T: RegionalNode> NodeFactory for RegionalNodeFactory<T> {
                 )
             })
             .collect()
+    }
+
+    fn output_port_for(&self, ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        T::output_port_for(ty, registry)
+    }
+
+    fn input_port_for(&self, ty: EDataType, registry: &ETypesRegistry) -> Option<usize> {
+        T::input_port_for(ty, registry)
     }
 }
 

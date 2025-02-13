@@ -38,7 +38,7 @@ ecolor = "0.30.0"
 eframe = "0.30"
 egui = "0.30"
 egui-modal = "0.6.0"
-egui-snarl = { git = "https://github.com/juh9870/egui-snarl.git", rev = "59a3427e4a3168c23444b24925d33cc0ec8bd204" }
+egui-snarl = { git = "https://github.com/juh9870/egui-snarl.git", rev = "a6b15514a5502771523b71f29cac8e74161f31fb" }
 egui-toast = "0.16.0"
 egui_colors = { git = "https://github.com/frankvgompel/egui_colors.git", rev = "3611798ea18d46cc4c7d7d5078929c9486f44c84" }
 egui_commonmark = "0.19.0"

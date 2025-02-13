@@ -6,6 +6,7 @@ use crate::graph::node::stateful::generic::GenericStatefulNode;
 use crate::graph::node::variables::remember_variables;
 use crate::graph::node::{ExecutionResult, NodeContext};
 use crate::graph::region::{get_region_execution_data, RegionExecutionData};
+use crate::registry::ETypesRegistry;
 use crate::value::EValue;
 use ustr::Ustr;
 
@@ -121,6 +122,14 @@ impl GenericStatefulNode for ConstructListNode {
 
     fn create() -> Self {
         Self { output_ty: None }
+    }
+
+    fn output_port_for(ty: EDataType, _registry: &ETypesRegistry) -> Option<usize> {
+        ty.is_list().then_some(0)
+    }
+
+    fn input_port_for(ty: EDataType, _registry: &ETypesRegistry) -> Option<usize> {
+        ty.is_number().then_some(0)
     }
 }
 

@@ -12,7 +12,7 @@ use crate::graph::node::serde_node::impl_serde_node;
 use crate::graph::node::{
     ExecutionExtras, ExecutionResult, InputData, Node, NodeContext, NodeFactory, OutputData,
 };
-use crate::project::docs::{Docs, DocsRef};
+use crate::project::docs::DocsRef;
 use crate::value::id::ETypeId;
 use crate::value::EValue;
 use egui_snarl::{InPin, InPinId, NodeId, OutPin};
@@ -71,7 +71,7 @@ impl Node for StructNode {
         "struct_node".into()
     }
 
-    fn title(&self, context: NodeContext, _docs: &Docs) -> String {
+    fn title(&self, context: NodeContext) -> String {
         let Some(id) = self.id else {
             return "Struct".into();
         };

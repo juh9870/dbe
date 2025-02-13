@@ -8,6 +8,7 @@ use crate::graph::region::region_graph::{RegionGraph, RegionGraphData};
 use crate::graph::region::{RegionExecutionData, RegionInfo};
 use crate::graph::Graph;
 use crate::m_try;
+use crate::project::docs::Docs;
 use crate::project::project_graph::ProjectGraphs;
 use crate::project::side_effects::SideEffectsContext;
 use crate::registry::ETypesRegistry;
@@ -24,6 +25,7 @@ macro_rules! node_context {
     ($source:expr) => {
         NodeContext {
             registry: $source.registry,
+            docs: $source.docs,
             inputs: $source.inputs,
             outputs: $source.outputs,
             regions: $source.regions,
@@ -44,6 +46,7 @@ impl<'a> GraphExecutionContext<'a, 'a> {
     pub fn from_graph(
         graph: &'a Graph,
         registry: &'a ETypesRegistry,
+        docs: &'a Docs,
         graphs: Option<&'a ProjectGraphs>,
         side_effects: SideEffectsContext<'a>,
         is_node_group: bool,
@@ -56,6 +59,7 @@ impl<'a> GraphExecutionContext<'a, 'a> {
             &graph.outputs,
             &graph.inline_values,
             registry,
+            docs,
             graphs,
             side_effects,
             is_node_group,
@@ -66,6 +70,26 @@ impl<'a> GraphExecutionContext<'a, 'a> {
         )
     }
 
+    pub fn from_graph_and_context(
+        graph: &'a Graph,
+        context: NodeContext<'a>,
+        side_effects: SideEffectsContext<'a>,
+        is_node_group: bool,
+        input_values: &'a [EValue],
+        output_values: &'a mut Option<Vec<EValue>>,
+    ) -> Self {
+        Self::from_graph(
+            graph,
+            context.registry,
+            context.docs,
+            context.graphs,
+            side_effects,
+            is_node_group,
+            input_values,
+            output_values,
+        )
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub(super) fn new(
         snarl: &'a Snarl<SnarlNode>,
@@ -73,6 +97,7 @@ impl<'a> GraphExecutionContext<'a, 'a> {
         outputs: &'a SmallVec<[GraphOutput; 1]>,
         inline_values: &'a OrderMap<InPinId, EValue>,
         registry: &'a ETypesRegistry,
+        docs: &'a Docs,
         graphs: Option<&'a ProjectGraphs>,
         side_effects: SideEffectsContext<'a>,
         is_node_group: bool,
@@ -88,6 +113,7 @@ impl<'a> GraphExecutionContext<'a, 'a> {
                 outputs,
                 inline_values,
                 registry,
+                docs,
                 side_effects,
                 graphs,
                 cache: Default::default(),
@@ -214,7 +240,7 @@ impl GraphExecutionContext<'_, '_> {
         pin: InPinId,
         node: &SnarlNode,
     ) -> miette::Result<Option<&EValue>> {
-        if !node.has_inline_values()? {
+        if !node.has_inline_values(pin.input) {
             return Ok(None);
         }
         if !node
@@ -449,6 +475,7 @@ pub struct PartialGraphExecutionContext<'a> {
     pub outputs: &'a SmallVec<[GraphOutput; 1]>,
     pub inline_values: &'a OrderMap<InPinId, EValue>,
     pub registry: &'a ETypesRegistry,
+    pub docs: &'a Docs,
     pub graphs: Option<&'a ProjectGraphs>,
     pub side_effects: SideEffectsContext<'a>,
     pub is_node_group: bool,
@@ -466,6 +493,7 @@ impl<'a> PartialGraphExecutionContext<'a> {
     pub fn from_graph(
         graph: &'a Graph,
         registry: &'a ETypesRegistry,
+        docs: &'a Docs,
         graphs: Option<&'a ProjectGraphs>,
         side_effects: SideEffectsContext<'a>,
         is_node_group: bool,
@@ -479,6 +507,7 @@ impl<'a> PartialGraphExecutionContext<'a> {
                 inline_values: &graph.inline_values,
                 cache: Default::default(),
                 registry,
+                docs,
                 graphs,
                 side_effects,
                 is_node_group,
@@ -507,6 +536,7 @@ impl<'a> PartialGraphExecutionContext<'a> {
                 inline_values: self.inline_values,
                 cache: MaybeOwnedMut::Borrowed(&mut self.cache),
                 registry: self.registry,
+                docs: self.docs,
                 side_effects: self.side_effects.clone(),
                 graphs: self.graphs,
                 is_node_group: self.is_node_group,

@@ -2,12 +2,14 @@ use crate::etype::eitem::EItemInfo;
 use crate::etype::EDataType;
 use crate::graph::node::commands::{SnarlCommand, SnarlCommands};
 use crate::graph::node::ports::NodePortType;
-use crate::graph::node::serde_node::impl_serde_node;
 use crate::graph::node::{
     ExecutionExtras, ExecutionResult, InputData, Node, NodeContext, NodeFactory, OutputData,
 };
+use crate::json_utils::JsonValue;
+use crate::registry::ETypesRegistry;
 use crate::value::EValue;
-use egui_snarl::{InPin, InPinId, OutPin, OutPinId};
+use egui_snarl::{InPin, OutPin, OutPinId};
+use miette::IntoDiagnostic;
 use serde::{Deserialize, Serialize};
 use ustr::Ustr;
 
@@ -16,6 +18,8 @@ pub struct ListNode {
     item: Option<EDataType>,
     #[serde(default)]
     items_count: usize,
+    #[serde(default)]
+    has_connection: Vec<bool>,
 }
 
 impl ListNode {
@@ -23,6 +27,7 @@ impl ListNode {
         Self {
             item: None,
             items_count: 0,
+            has_connection: vec![],
         }
     }
 
@@ -30,6 +35,7 @@ impl ListNode {
         Self {
             item: Some(ty),
             items_count: 0,
+            has_connection: vec![],
         }
     }
 }
@@ -41,14 +47,27 @@ impl Default for ListNode {
 }
 
 impl Node for ListNode {
-    impl_serde_node!();
+    fn write_json(&self, _registry: &ETypesRegistry) -> miette::Result<JsonValue> {
+        serde_json::value::to_value(self).into_diagnostic()
+    }
+    fn parse_json(
+        &mut self,
+        _registry: &ETypesRegistry,
+        value: &mut JsonValue,
+    ) -> miette::Result<()> {
+        Self::deserialize(value.take())
+            .map(|node| *self = node)
+            .into_diagnostic()?;
+        self.has_connection.resize_with(self.items_count, || false);
+        Ok(())
+    }
 
     fn id(&self) -> Ustr {
         ListNodeFactory.id()
     }
 
-    fn has_inline_values(&self) -> miette::Result<bool> {
-        Ok(false)
+    fn has_inline_values(&self, _input: usize) -> bool {
+        false
     }
 
     fn inputs_count(&self, _context: NodeContext) -> usize {
@@ -107,6 +126,9 @@ impl Node for ListNode {
         if self._default_try_connect(context, commands, from, to, incoming_type)? {
             if to.id.input == self.items_count {
                 self.items_count += 1;
+                self.has_connection.push(true);
+            } else {
+                self.has_connection[to.id.input] = true;
             }
             Ok(true)
         } else {
@@ -116,34 +138,17 @@ impl Node for ListNode {
 
     fn try_disconnect(
         &mut self,
-        _context: NodeContext,
+        context: NodeContext,
         commands: &mut SnarlCommands,
         from: &OutPin,
         to: &InPin,
     ) -> miette::Result<()> {
-        commands.push(SnarlCommand::DisconnectRaw {
-            from: from.id,
-            to: to.id,
-        });
-        for i in to.id.input..(self.items_count - 1) {
-            commands.push(SnarlCommand::InputMovedRaw {
-                from: InPinId {
-                    node: to.id.node,
-                    input: i + 1,
-                },
-                to: InPinId {
-                    node: to.id.node,
-                    input: i,
-                },
-            });
+        self._default_try_disconnect(context, commands, from, to)?;
+        self.has_connection[to.id.input] = false;
+        while self.items_count > 0 && !self.has_connection[self.items_count - 1] {
+            self.items_count -= 1;
+            self.has_connection.pop();
         }
-        self.items_count -= 1;
-        commands.push(SnarlCommand::DeletePinValue {
-            pin: InPinId {
-                node: to.id.node,
-                input: self.items_count,
-            },
-        });
 
         Ok(())
     }

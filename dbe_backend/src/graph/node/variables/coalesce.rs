@@ -8,7 +8,7 @@ use crate::graph::node::variables::{
     sync_variable_types, NodeWithVariables, VariableSide, VariablesState,
 };
 use crate::graph::node::{ExecutionResult, NodeContext};
-use crate::registry::optional_helpers::{unwrap_optional_value, wrap_in_option};
+use crate::registry::optional_helpers::{is_type_option, unwrap_optional_value, wrap_in_option};
 use crate::registry::ETypesRegistry;
 use crate::value::EValue;
 use egui_snarl::NodeId;
@@ -163,5 +163,17 @@ impl<const DEFAULT: bool> GenericStatefulNode for Coalesce<DEFAULT> {
 
     fn create() -> Self {
         Self { output_ty: None }
+    }
+
+    fn output_port_for(ty: EDataType, _registry: &ETypesRegistry) -> Option<usize> {
+        if DEFAULT {
+            None
+        } else {
+            is_type_option(ty).then_some(0)
+        }
+    }
+
+    fn input_port_for(ty: EDataType, _registry: &ETypesRegistry) -> Option<usize> {
+        is_type_option(ty).then_some(0)
     }
 }

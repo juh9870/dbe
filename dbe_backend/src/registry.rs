@@ -33,6 +33,8 @@ use utils::whatever_ref::WhateverRef;
 pub mod config;
 pub mod optional_helpers;
 
+pub static OPTIONAL_PREFIX: &str = "sys:optional";
+
 pub static OPTIONAL_ID: LazyLock<ETypeId> =
     LazyLock::new(|| ETypeId::from_raw("sys:optional".into()));
 pub static OPTIONAL_STRING_ID: LazyLock<ETypeId> =

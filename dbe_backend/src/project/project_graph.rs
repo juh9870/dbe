@@ -19,6 +19,10 @@ pub struct ProjectGraph {
     pub name: String,
     /// Whether the graph is a node group
     pub is_node_group: bool,
+    /// Whenever the graph should be hidden from search
+    pub hide_from_search: bool,
+    /// Categories of the graph
+    pub categories: Vec<String>,
     graph: GraphHolder,
     inputs_cache: SmallVec<[GraphInput; 1]>,
     outputs_cache: SmallVec<[GraphOutput; 1]>,
@@ -54,6 +58,8 @@ impl ProjectGraph {
             id,
             name: "".to_string(),
             is_node_group: false,
+            hide_from_search: false,
+            categories: Default::default(),
             graph: GraphHolder::Graph(Box::default()),
             inputs_cache: Default::default(),
             outputs_cache: Default::default(),
@@ -118,6 +124,8 @@ impl ProjectGraph {
                     id: data.id,
                     name: data.name,
                     is_node_group: data.is_node_group,
+                    hide_from_search: data.hide_from_search,
+                    categories: data.categories,
                     graph: GraphHolder::Graph(Box::new(graph)),
                     inputs_cache: Default::default(),
                     outputs_cache: Default::default(),
@@ -140,6 +148,8 @@ impl ProjectGraph {
                     id: Uuid::new_v4(),
                     name: "".to_string(),
                     is_node_group: false,
+                    hide_from_search: false,
+                    categories: Default::default(),
                     graph: GraphHolder::Graph(Box::new(graph)),
                     inputs_cache: Default::default(),
                     outputs_cache: Default::default(),
@@ -154,6 +164,8 @@ impl ProjectGraph {
         let serialized = SerializedGraphRepr::V1(PackedProjectGraph {
             id: self.id,
             is_node_group: self.is_node_group,
+            hide_from_search: self.hide_from_search,
+            categories: self.categories.clone(),
             name: self.name.clone(),
             graph,
         });
@@ -188,6 +200,10 @@ struct PackedProjectGraph {
     id: Uuid,
     #[serde(default)]
     is_node_group: bool,
+    #[serde(default)]
+    hide_from_search: bool,
+    #[serde(default)]
+    categories: Vec<String>,
     #[serde(default)]
     name: String,
     graph: JsonValue,

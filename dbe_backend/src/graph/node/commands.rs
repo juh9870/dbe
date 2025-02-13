@@ -11,15 +11,19 @@ use uuid::Uuid;
 
 #[derive(derive_more::Debug)]
 pub enum SnarlCommand {
-    /// Connects an output pin to an input pin, marking the input pin's node as dirty
+    /// Connects an output pin to an input pin
     Connect { from: OutPinId, to: InPinId },
-    /// Disconnects an output pin from an input pin, marking the input pin's node as dirty
+    /// Disconnects an output pin from an input pin
     Disconnect { from: OutPinId, to: InPinId },
-    /// Disconnects all connections coming from the pin, marking the output pins' node as dirty
+    /// Disconnects all connections coming from the pin
     DropOutputs { from: OutPinId },
-    /// Disconnects all connections to the pin, marking the input pin's node as dirty
+    /// Disconnects all connections to the pin
     DropInputs { to: InPinId },
-    /// Deletes a node, running disconnection logic and marking connected nodes as dirty
+    /// Disconnects all connections coming from the node
+    DropNodeOutputs { from: NodeId },
+    /// Disconnects all connections to the node
+    DropNodeInputs { to: NodeId },
+    /// Deletes a node, running disconnection logic
     DeleteNode { node: NodeId },
     /// Disconnects and reconnects an output pin to an input pin, running the connected nodes' logic
     ///
@@ -35,23 +39,23 @@ pub enum SnarlCommand {
     RequireRegionRebuild,
     /// Removes the inline input value of the pin
     DeletePinValue { pin: InPinId },
-    /// Connects an output pin to an input pin, marking the input pin's node as dirty
+    /// Connects an output pin to an input pin
     ///
     /// This command bypasses node logic, and should only be used by the node
     /// itself, after the connect logic has been done
     ConnectRaw { from: OutPinId, to: InPinId },
-    /// Disconnects an output pin from an input pin, marking the input pin's node as dirty
+    /// Disconnects an output pin from an input pin
     ///
     /// This command bypasses node logic, and should only be used by the node
     /// itself, after the disconnect logic has been done
     DisconnectRaw { from: OutPinId, to: InPinId },
-    /// Disconnects all connections to the pin, marking the input pin's node as dirty
+    /// Disconnects all connections to the pin
     ///
     /// This command bypasses node logic, and should only be used by the node
     /// itself, after the disconnect logic has been done
     DropInputsRaw { to: InPinId },
     // Is this ever a good idea?
-    // /// Disconnects all connections coming from the pin, marking the output pins' node as dirty
+    // /// Disconnects all connections coming from the pin
     // ///
     // /// This command bypasses node logic, and should only be used by the node
     // /// itself, after the disconnect logic has been done
@@ -67,8 +71,6 @@ pub enum SnarlCommand {
     /// Changes all connections to the input pin to point at the new pins according to the new indices
     ///
     /// This command bypasses node logic, and should only be used with caution
-    ///
-    /// This command does NOT mark the node as dirty
     InputsRearrangedRaw {
         node: NodeId,
         indices: RearrangeIndices,
@@ -77,8 +79,6 @@ pub enum SnarlCommand {
     /// Changes all connections from the output pin to point according to the new indices
     ///
     /// This command bypasses node logic, and should only be used with caution
-    ///
-    /// This command does NOT mark the node as dirty
     OutputsRearrangedRaw {
         node: NodeId,
         indices: RearrangeIndices,
@@ -94,8 +94,6 @@ pub enum SnarlCommand {
         operation: VecOperation<RegionVariable>,
     },
     /// Runs a custom callback on the graph and execution context
-    ///
-    /// Don't forget to mark nodes as dirty if needed, either in the callback or as a separate command
     Custom {
         #[debug("fn()")]
         cb: CustomCommand,
@@ -293,6 +291,24 @@ impl SnarlCommand {
             SnarlCommand::DropInputs { to } => {
                 for pin in ctx.snarl.in_pin(to).remotes {
                     SnarlCommand::Disconnect { from: pin, to }.execute(ctx, commands)?;
+                }
+            }
+            SnarlCommand::DropNodeOutputs { from } => {
+                for pin in ctx.snarl.wires().filter(|w| w.0.node == from).collect_vec() {
+                    SnarlCommand::Disconnect {
+                        from: pin.0,
+                        to: pin.1,
+                    }
+                    .execute(ctx, commands)?;
+                }
+            }
+            SnarlCommand::DropNodeInputs { to } => {
+                for pin in ctx.snarl.wires().filter(|w| w.1.node == to).collect_vec() {
+                    SnarlCommand::Disconnect {
+                        from: pin.0,
+                        to: pin.1,
+                    }
+                    .execute(ctx, commands)?;
                 }
             }
             SnarlCommand::DeleteNode { node } => {

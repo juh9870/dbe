@@ -225,4 +225,8 @@ impl NodeFactory for FormatNodeFactory {
             fmt: None,
         })
     }
+
+    fn output_port_for(&self, ty: EDataType, _registry: &ETypesRegistry) -> Option<usize> {
+        ty.is_string().then_some(0)
+    }
 }
